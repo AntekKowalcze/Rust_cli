@@ -3,7 +3,7 @@ mod test {
 
     use crate::{
         main_menu::{printing_information, user_input::creating_input},
-        pattern_matching,
+        matching_input,
     };
     #[test]
     fn input_test() {
@@ -17,6 +17,6 @@ mod test {
     #[should_panic]
     fn patter_check() {
         let input_vec = vec!["some"];
-        pattern_matching::pattern_matching(input_vec);
+        matching_input::matching_input(input_vec);
     }
 }
