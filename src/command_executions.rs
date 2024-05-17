@@ -17,17 +17,16 @@ pub fn echo(input_vec: Vec<&str>) {
             //getting text we want to write
             let file_name = input_vec[redirection + 1];
 
-            match File::open(file_name) {
-                Ok(_) => File::create(file_name)
-                    .expect("hardcoded no errors in opening file")
-                    .write(string_we_want_to_write.as_bytes())
-                    .expect("failed to write into a file"),
+            let mut file = File::options()
+                .create(true) //when file doesnt exist it creates new
+                .read(true)
+                .write(true)
+                .append(true) //text will be appended to already existing, if you want to overwrite use truncate(true)
+                .open(file_name)
+                .expect("Failed to open a file");
 
-                Err(_) => File::create(file_name) //if file doesnt exit create new
-                    .expect("cannont open a file")
-                    .write(string_we_want_to_write.as_bytes())
-                    .expect("failed to write to file"),
-            };
+            file.write(string_we_want_to_write.as_bytes())
+                .expect("failed to write into a file");
         } else {
             print!("{} ", iterator);
             io::stdout().flush().expect("failed to flush");
@@ -38,3 +37,4 @@ pub fn echo(input_vec: Vec<&str>) {
 pub fn exit() {
     std::process::exit(0) //exiting actual process
 }
+pub fn changing_directory() {}
