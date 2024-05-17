@@ -1,4 +1,4 @@
-//! to do
+//! TODO
 //! moving in computer paths ect.
 //! }echo: repeats input
 //! cat: concatenates files
