@@ -14,7 +14,7 @@ mod main_menu;
 mod matching_input;
 mod test;
 
-fn main() {
+pub fn main() {
     loop {
         printing_information();
         let user_input: String = creating_input().expect("hardcoded can't be error");

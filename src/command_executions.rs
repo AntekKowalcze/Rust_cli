@@ -1,7 +1,12 @@
 use std::{
+    env::set_current_dir,
     fs::File,
     io::{self, Write},
+    path::Path,
 };
+
+use crate::main;
+
 pub fn echo(input_vec: Vec<&str>) {
     for iterator in input_vec[1..].iter() {
         if *iterator == ">>" {
@@ -37,4 +42,15 @@ pub fn echo(input_vec: Vec<&str>) {
 pub fn exit() {
     std::process::exit(0) //exiting actual process
 }
-pub fn changing_directory() {}
+
+pub fn changing_directory(input_vec: Vec<&str>) {
+    if input_vec.len() < 2 {
+        println!("No directory specified");
+        main()
+    }
+    let go_to_path_str = input_vec[1];
+    let path = Path::new(go_to_path_str);
+    set_current_dir(path).unwrap_or_else(|e| println!("{}", e));
+}
+
+//zobaczyć jakie są dostępne foldery, sprawdzić czy folder użytkownika znajduje się w nich, jeśli cd .. skopiować wyższą ścieżkę,
