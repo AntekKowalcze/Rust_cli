@@ -1,6 +1,6 @@
 use std::{
     env::{current_dir, set_current_dir},
-    fs::File,
+    fs::{self, File},
     io::{self, Write},
     path::Path,
 };
@@ -44,6 +44,8 @@ pub fn exit() {
 }
 
 pub fn changing_directory(input_vec: Vec<&str>) {
+    let last_flag_index: usize = 1;
+    no_flag_expected(&input_vec, last_flag_index);
     if let Some(go_to_path_str) = input_vec.get(1) {
         if *go_to_path_str == ".." {
             if let Ok(mut path) = current_dir() {
@@ -62,4 +64,66 @@ pub fn changing_directory(input_vec: Vec<&str>) {
         main()
     }
 }
-pub fn list_directories(input_vec: Vec<&str>) {}
+pub fn list_directories(input_vec: Vec<&str>) {
+    let last_flag_index: usize = 1;
+    no_flag_expected(&input_vec, last_flag_index);
+    let files_and_directories = fs::read_dir(".").unwrap();
+    if let Some(flag) = input_vec.get(1) {
+        match *flag {
+            "-d" => {
+                for object in files_and_directories {
+                    match object {
+                        Ok(object) => {
+                            if object.path().is_dir() {
+                                println!("{}", object.path().display());
+                            }
+                        }
+                        Err(e) => {
+                            println!("{}", e);
+                            main()
+                        }
+                    }
+                }
+            }
+            "-f" => {
+                for object in files_and_directories {
+                    match object {
+                        Ok(object) => {
+                            if object.path().is_file() {
+                                println!("{}", object.path().display());
+                            }
+                        }
+                        Err(e) => {
+                            println!("{}", e);
+                            main()
+                        }
+                    }
+                }
+            }
+            _ => {
+                println!("Error - Wrong flag!");
+                main()
+            }
+        }
+    } else {
+        for object in files_and_directories {
+            match object {
+                Ok(object) => {
+                    println!("{}", object.path().display());
+                }
+
+                Err(e) => {
+                    println!("{}", e);
+                    main()
+                }
+            }
+        }
+    }
+}
+fn no_flag_expected(input_vec: &Vec<&str>, last_flag_index: usize) {
+    //This function look if there is more content that it should be in input
+    if let Some(_) = input_vec.get(last_flag_index + 1) {
+        println!("Wrong command");
+        main()
+    }
+}
