@@ -1,5 +1,5 @@
 use std::{
-    env::set_current_dir,
+    env::{current_dir, set_current_dir},
     fs::File,
     io::{self, Write},
     path::Path,
@@ -44,13 +44,22 @@ pub fn exit() {
 }
 
 pub fn changing_directory(input_vec: Vec<&str>) {
-    if input_vec.len() < 2 {
+    if let Some(go_to_path_str) = input_vec.get(1) {
+        if *go_to_path_str == ".." {
+            if let Ok(mut path) = current_dir() {
+                path.pop();
+
+                set_current_dir(path).unwrap_or_else(|e| println!("{}", e))
+            } else {
+                println!("Error there is no current path");
+            }
+        } else {
+            let path = Path::new(*go_to_path_str);
+            set_current_dir(path).unwrap_or_else(|e| println!("{}", e));
+        }
+    } else {
         println!("No directory specified");
         main()
     }
-    let go_to_path_str = input_vec[1];
-    let path = Path::new(go_to_path_str);
-    set_current_dir(path).unwrap_or_else(|e| println!("{}", e));
 }
-
-//zobaczyć jakie są dostępne foldery, sprawdzić czy folder użytkownika znajduje się w nich, jeśli cd .. skopiować wyższą ścieżkę,
+pub fn list_directories(input_vec: Vec<&str>) {}
