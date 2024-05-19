@@ -10,6 +10,7 @@ mod matching_input;
 mod test;
 
 pub fn main() {
+    //TODO pierwsza wyśiwetlana ściezka, aktualna ściezka
     loop {
         printing_information();
         let user_input: String = creating_input().expect("hardcoded can't be error");
