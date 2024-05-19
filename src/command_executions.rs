@@ -120,10 +120,28 @@ pub fn list_directories(input_vec: Vec<&str>) {
         }
     }
 }
+
+pub fn concatanate_file(input_vec: Vec<&str>) {
+    let last_flag_index = 1;
+    no_flag_expected(&input_vec, last_flag_index);
+    if let Some(path_to_a_file) = input_vec.get(1) {
+        let path_to_a_file = Path::new(*path_to_a_file);
+        if let Ok(file_content) = fs::read_to_string(path_to_a_file) {
+            println!("{}", file_content);
+        } else {
+            println!("File not found");
+            main()
+        }
+    } else {
+        println!("To less arguments");
+        main()
+    }
+}
+
 fn no_flag_expected(input_vec: &Vec<&str>, last_flag_index: usize) {
     //This function look if there is more content that it should be in input
     if let Some(_) = input_vec.get(last_flag_index + 1) {
-        println!("Wrong command");
+        println!("Too mutch arguments");
         main()
     }
 }
