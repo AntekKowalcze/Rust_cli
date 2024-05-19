@@ -1,6 +1,6 @@
 use std::{
     env::{current_dir, set_current_dir},
-    fs::{self, File},
+    fs::{self, read, read_dir, File},
     io::{self, Write},
     path::Path,
 };
@@ -135,6 +135,75 @@ pub fn concatanate_file(input_vec: Vec<&str>) {
     } else {
         println!("To less arguments");
         main()
+    }
+}
+
+pub fn find_file_or_content_in_file(input_vec: Vec<&str>) {
+    match input_vec.get(1) {
+        Some(&"-f") => {
+            if let Some(file_name) = input_vec.get(2) {
+                if let Some(starting_point) = input_vec.get(3) {
+                    let starting_point_path = Path::new(*starting_point);
+                    set_current_dir(starting_point_path).unwrap_or_else(|e| {
+                        println!("{}", e);
+                        main()
+                    });
+
+                    let mut found = false;
+                    let mut marked_paths = Vec::new();
+                    while found == false {
+                        match current_dir() {
+                            Ok(current_dir) => {
+                                if let Ok(iterator) = read_dir(current_dir.clone()) {
+                                    for item in iterator {
+                                        if let Ok(item) = item {
+                                            if item.path().is_file() {
+                                                if item.file_name() == *file_name {
+                                                    println!("{}", item.path().display());
+                                                    found = true;
+                                                } else {
+                                                    marked_paths.push(current_dir.clone());
+                                                }
+                                            }
+                                        } else {
+                                            println!("Can't get entry from iterator");
+                                            main()
+                                        }
+                                    }
+                                } else {
+                                    println!("Unable to read directory");
+                                    main()
+                                }
+                            }
+                            Err(e) => {
+                                println!("{}", e);
+                                main()
+                            }
+                        }
+                    }
+                    //set current dir to starting
+                    //list files search for one set_current_dir(starting_point)
+                    //if found print path
+                    //else
+                    //list directories
+                    //choose one
+                    //check if its marked
+                    //if its marked choose next
+                    //if all are marked mark this directory as searched, go to starting point
+                } else {
+                    println!("Starting point not specified");
+                    main()
+                }
+            } else {
+                println!("No file specified");
+            }
+        }
+        Some(&"-c") => {}
+
+        None | _ => {
+            println!("Too less arguments");
+            main()
+        }
     }
 }
 

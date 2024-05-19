@@ -1,11 +1,6 @@
 //! TODO
-//! moving in computer paths ect.
-//! }echo: repeats input
-//! cat: concatenates files
-//! ls: lists directories
 //! find: locates files or directories
 //! grep: matches text in files
-//! cd: going to other directory
 use main_menu::printing_information::printing_information;
 use main_menu::user_input::creating_input;
 

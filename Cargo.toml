@@ -8,3 +8,4 @@
    [dependencies]
 
     whoami = "1.5.1"
+    walkdir = "2.5.0"
