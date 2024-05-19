@@ -1,8 +1,9 @@
 use std::{
     env::{current_dir, set_current_dir},
-    fs::{self, read, read_dir, File},
+    ffi::OsString,
+    fs::{self, read, read_dir, DirEntry, File},
     io::{self, Write},
-    path::Path,
+    path::{self, Path},
 };
 
 use crate::main;
@@ -139,9 +140,11 @@ pub fn concatanate_file(input_vec: Vec<&str>) {
 }
 
 pub fn find_file_or_content_in_file(input_vec: Vec<&str>) {
+    //TODO dodać że bez drugiego argumentu bieże domyślny akturalną ścieżkę
     match input_vec.get(1) {
         Some(&"-f") => {
             if let Some(file_name) = input_vec.get(2) {
+                let file_name = file_name.to_string();
                 if let Some(starting_point) = input_vec.get(3) {
                     let starting_point_path = Path::new(*starting_point);
                     set_current_dir(starting_point_path).unwrap_or_else(|e| {
@@ -151,28 +154,50 @@ pub fn find_file_or_content_in_file(input_vec: Vec<&str>) {
 
                     let mut found = false;
                     let mut marked_paths = Vec::new();
+                    let mut file_name_list: Vec<DirEntry> = Vec::new();
+                    let mut directory_list = Vec::new();
                     while found == false {
                         match current_dir() {
                             Ok(current_dir) => {
-                                if let Ok(iterator) = read_dir(current_dir.clone()) {
-                                    for item in iterator {
-                                        if let Ok(item) = item {
-                                            if item.path().is_file() {
-                                                if item.file_name() == *file_name {
-                                                    println!("{}", item.path().display());
-                                                    found = true;
-                                                } else {
-                                                    marked_paths.push(current_dir.clone());
+                                if !marked_paths.contains(&current_dir) {
+                                    //if not contains
+                                    if let Ok(iterator) = read_dir(&current_dir) {
+                                        for item in iterator {
+                                            if let Ok(item) = item {
+                                                if item.path().is_file() {
+                                                    file_name_list.push(item);
+                                                } else if item.path().is_dir() {
+                                                    directory_list.push(item.path());
                                                 }
+                                            } else {
+                                                println!("Can't get entry from iterator");
+                                                main()
                                             }
-                                        } else {
-                                            println!("Can't get entry from iterator");
-                                            main()
                                         }
+                                        match file_name_list.iter().find(|found_element| {
+                                            *found_element.file_name() == OsString::from(&file_name)
+                                        }) {
+                                            Some(found_element) => {
+                                                found = true;
+                                                println!(
+                                                    "Found this file at {}",
+                                                    found_element.path().display()
+                                                )
+                                            }
+                                            None => {
+                                                //wyczyść listę nazw plików
+                                                //przejdź do kolejnego nie oznaczonego folderu
+                                            }
+                                        }
+                                    } else {
+                                        println!("Unable to read directory");
+                                        main()
                                     }
                                 } else {
-                                    println!("Unable to read directory");
-                                    main()
+                                    set_current_dir(starting_point_path).unwrap_or_else(|e| {
+                                        println!("{}", e);
+                                        main()
+                                    });
                                 }
                             }
                             Err(e) => {
