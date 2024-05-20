@@ -151,82 +151,66 @@ pub fn find_file_or_content_in_file(input_vec: Vec<&str>) {
                         println!("{}", e);
                         main()
                     });
+                    let (mut directory_list, mut file_name_list) =
+                        listing_directories_and_or_files(true);
 
-                    let mut file_name_list: Vec<DirEntry> = Vec::new();
-                    let mut directory_list: Vec<Directory> = Vec::new();
+                    let mut marked_directory_list: Vec<PathBuf> = Vec::new();
 
                     match current_dir() {
                         Ok(current_dir) => {
-                            if let Ok(iterator) = read_dir(&current_dir) {
-                                for item in iterator {
-                                    if let Ok(item) = item {
-                                        if item.path().is_file() {
-                                            file_name_list.push(item);
-                                        } else if item.path().is_dir() {
-                                            let directory_path = Directory {
-                                                path: item.path(),
-                                                marked: false,
-                                            };
-                                            directory_list.push(directory_path);
-                                        }
-                                    } else {
-                                        println!("Can't get entry from iterator");
-                                        main()
-                                    }
-                                }
-                                match file_name_list.iter().find(|found_element| {
-                                    *found_element.file_name() == OsString::from(&file_name)
-                                }) {
-                                    Some(found_element) => {
-                                        println!(
-                                            "Found this file at {}",
-                                            found_element.path().display()
-                                        )
-                                    }
-                                    None => {
-                                        for directory in &directory_list {
-                                            if directory.marked == false {
-                                                set_current_dir(&directory.path).unwrap_or_else(
-                                                    |_| {
-                                                        println!(
-                                                            "Cant be error, path given in list"
-                                                        );
-                                                        main()
-                                                    },
-                                                );
-                                            }
-                                        }
-                                        //     0. Nie ma pliku zrób liste
-                                        //TODO 1. Sprawdź czy są jakieś inne, nie zaznaczone foldery
-                                        //     2. Jeśli są wejdź do pierwszego, wyczyść listę, sprawdź pliki, zrób listę
-                                        //     3. Powtórz 1-2 dopóki nie ma folderów.
-                                        //     4. jeśli nie ma folderów i nie znaleziono pliku ,
+                            comparing_files(
+                                file_name_list,
+                                file_name,
+                                marked_directory_list,
+                                current_dir,
+                                starting_point_path,
+                                directory_list,
+                            );
+                            // match file_name_list.iter().find(|found_element| {
+                            //     found_element.file_name() == OsString::from(&file_name)
+                            // }) {
+                            //     Some(found_element) => {
+                            //         println!(
+                            //             "Found this file at {}",
+                            //             found_element.path().display()
+                            //         )
+                            //     }
+                            //     None => {
+                            //         for directory in &directory_list {
+                            //             if directory.marked == false {
+                            //                 set_current_dir(&directory.path).unwrap_or_else(|_| {
+                            //                     println!("Cant be error, path given in list");
+                            //                     main()
+                            //                 });
+                            //             }
+                            //         }
+                            //         //     0. Nie ma pliku zrób liste
+                            //         //TODO 1. Sprawdź czy są jakieś inne, nie zaznaczone foldery
+                            //         //     2. Jeśli są wejdź do pierwszego, wyczyść listę, sprawdź pliki, zrób listę
+                            //         //     3. Powtórz 1-2 dopóki nie ma folderów.
+                            //         //     4. jeśli nie ma folderów i nie znaleziono pliku ,
 
-                                        //sprawdź czy są jakieś nie marked i czy jest znalezione
-                                        //wyczyść listę nazw plików
-                                        //przejdź do kolejnego nie oznaczonego folderu
-                                    }
-                                }
-                            } else {
-                                println!("Unable to read directory");
-                                main()
-                            }
+                            //         //sprawdź czy są jakieś nie marked i czy jest znalezione
+                            //         //wyczyść listę nazw plików
+                            //         //przejdź do kolejnego nie oznaczonego folderu
+                            //     }
+                            // }
+
+                            //set current dir to starting
+                            //list files search for one set_current_dir(starting_point)
+                            //if found print path
+                            //else
+                            //list directories
+                            //choose one
+                            //check if its marked
+                            //if its marked choose next
+                            //if all are marked mark this directory as searched, go to starting point
                         }
                         Err(e) => {
                             println!("{}", e);
                             main()
                         }
                     }
-
-                    //set current dir to starting
-                    //list files search for one set_current_dir(starting_point)
-                    //if found print path
-                    //else
-                    //list directories
-                    //choose one
-                    //check if its marked
-                    //if its marked choose next
-                    //if all are marked mark this directory as searched, go to starting point
                 } else {
                     println!("Starting point not specified");
                     main()
@@ -243,29 +227,11 @@ pub fn find_file_or_content_in_file(input_vec: Vec<&str>) {
         }
     }
 }
-
 fn no_flag_expected(input_vec: &Vec<&str>, last_flag_index: usize) {
     //This function look if there is more content that it should be in input
     if let Some(_) = input_vec.get(last_flag_index + 1) {
         println!("Too mutch arguments");
         main()
-    }
-}
-
-struct Directory {
-    path: std::path::PathBuf,
-    marked: bool,
-}
-impl Directory {
-    fn mark_true(&mut self) {
-        self.marked = true;
-    }
-    fn is_marked(&self) -> bool {
-        if self.marked == true {
-            true
-        } else {
-            false
-        }
     }
 }
 
@@ -322,8 +288,14 @@ fn prototype(input_vec: &Vec<&str>) {
                                         println!("Cant get into directory, {}", e);
                                         main()
                                     });
-                                    directory_list = listing_directories();
 
+                                    let (directory_list_new, option_file_list) =
+                                        listing_directories_and_or_files(false);
+                                    if let Some(file_list) = option_file_list {
+                                        println!("smth went wrong when calling function")
+                                    } else {
+                                        //recursive_call_push_dir_list
+                                    }
                                     //recursive call
                                     //
                                 }
@@ -368,20 +340,99 @@ fn prototype(input_vec: &Vec<&str>) {
     }
 }
 
-fn listing_directories() -> Vec<PathBuf> {
+fn listing_directories_and_or_files(files_needed: bool) -> (Vec<PathBuf>, Option<Vec<DirEntry>>) {
     let mut directory_list: Vec<PathBuf> = Vec::new();
+    let mut file_list: Vec<std::fs::DirEntry> = Vec::new();
     if let Ok(current_dir) = current_dir() {
         if let Ok(iterator) = read_dir(current_dir) {
             for item in iterator {
                 if let Ok(item) = item {
-                    if item.path().is_dir() {
+                    if files_needed {
+                        if item.path().is_file() {
+                            file_list.push(item);
+                        } else if item.path().is_dir() {
+                            directory_list.push(item.path());
+                        }
+                    } else if item.path().is_dir() {
                         directory_list.push(item.path());
                     }
                 }
             }
+            if files_needed {
+                (directory_list, Some(file_list))
+            } else {
+                (directory_list, None)
+            }
+        } else {
+            println!("couldnt read file");
+            (directory_list, None)
         }
     } else {
         panic!("Couldnt get current path")
     }
-    directory_list.to_owned()
 }
+fn comparing_files(
+    file_name_list: Option<Vec<DirEntry>>,
+    file_name: String,
+    mut marked_directory_list: Vec<PathBuf>,
+    current_dir: PathBuf,
+    starting_point_path: &Path,
+    directory_list: Vec<PathBuf>,
+) {
+    match file_name_list {
+        Some(file_name_list) => {
+            match file_name_list
+                .iter()
+                .find(|found_element| *found_element.file_name() == OsString::from(&file_name))
+            {
+                Some(found_element) => {
+                    println!("Found this file at {}", found_element.path().display())
+                }
+                None => {
+                    if current_dir == starting_point_path {
+                        println!(
+                            "File not found in this tree {}",
+                            starting_point_path.display()
+                        )
+                    } else {
+                        reversing_graph(marked_directory_list, directory_list, current_dir);
+                    }
+
+                    // for directory in &directory_list {
+                    //     if !marked_directory_list.contains(&directory) {
+                    //         set_current_dir(directory).expect(
+                    //             "hardcoded directory should exist/eventually permission problem",
+                    //         );
+                    //         //checking files and listing dirs (create new vectors)
+                    //     }
+                    // }
+                }
+            }
+        }
+        None => {
+            panic!("there should be file list");
+        }
+    }
+}
+fn reversing_graph(
+    mut marked_directory_list: Vec<PathBuf>,
+    directory_list: Vec<PathBuf>,
+    current_dir: PathBuf,
+) {
+    //1. dodaj siebie do sprawdzonych
+    marked_directory_list.push(current_dir);
+
+    //2. stwórz wektor directory których nie ma w directory list,
+
+    for directory in directory_list {
+        if !marked_directory_set.contains(&directory) {
+            unchecked_directory_list.push(directory);
+        }
+    }
+}
+//Jeśli jest pusty, idź w góre wywołaj tworzenie wektora bez plików opróżnij marked_directory_list idź do 1.
+//Jeśli nie
+//3. wejdź do directory.0
+//4. ustaw nowe directory jako nazwę current_directory
+//5. Stwórz nowy wektor plików i directory (wywołaj funkcję)
+//6. wywołaj sprawdzanie plików
