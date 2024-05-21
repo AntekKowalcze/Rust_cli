@@ -238,6 +238,7 @@ fn comparing_files(
             {
                 Some(found_element) => {
                     println!("Found this file at {}", found_element.path().display());
+                    marked_directory_set.insert(current_dir.clone());
                     main();
                 }
                 None => {
@@ -249,6 +250,7 @@ fn comparing_files(
                             starting_point_path.display()
                         )
                     } else {
+                        marked_directory_set.insert(current_dir.clone());
                         reversing_graph(
                             marked_directory_set,
                             directory_list,
@@ -272,6 +274,7 @@ fn reversing_graph(
     file_name: String,
     starting_point_path: &Path,
 ) {
+    //PROGRAM JAKBY BLOKUJE SIĘ NA JEDNEJ ŚCIEŻCE
     //1. dodaj siebie do sprawdzonych
     marked_directory_set.insert(current_dir.clone());
 
@@ -303,8 +306,6 @@ fn reversing_graph(
             println!("Couldnt get into higher directory {e} ");
             main()
         });
-        marked_directory_set.clear();
-        marked_directory_set.insert(new_dir.clone());
 
         let (mut directory_list, mut file_name_list) = listing_directories_and_or_files(false);
         reversing_graph(
