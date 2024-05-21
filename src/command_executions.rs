@@ -4,7 +4,6 @@ use std::{
     ffi::OsString,
     fs::{self, read_dir, DirEntry, File},
     io::{self, Write},
-    os::windows::fs::MetadataExt,
     path::{Path, PathBuf},
     thread,
 };
@@ -144,15 +143,16 @@ pub fn concatanate_file(input_vec: Vec<&str>) {
 }
 
 pub fn find_file_or_content_in_file(input_vec: Vec<&str>) {
-    //TODO dodać że bez drugiego argumentu bieże domyślny akturalną ścieżkę
+    //Funciton findes file in given tree
     match input_vec.get(1) {
         Some(&"-f") => {
-            let mut files_found: i32 = 0;
+            let files_found: i32 = 0;
             if let Some(file_name) = input_vec.get(2) {
                 let file_name = file_name.to_string();
                 if let Some(starting_point) = input_vec.get(3) {
                     setting_up_starting_path_and_hash_set(starting_point, file_name, files_found);
                 } else {
+                    //if starting path isnt given start in current directory
                     let starting_point = current_dir().expect("cant get current directory");
                     let starting_point = starting_point.to_str().expect("cant get it into str");
                     setting_up_starting_path_and_hash_set(&starting_point, file_name, files_found)
@@ -182,9 +182,9 @@ fn setting_up_starting_path_and_hash_set(
         main()
     });
 
-    let (directory_list, file_name_list) = listing_directories_and_or_files(true);
+    let (directory_list, file_name_list) = listing_directories_and_or_files(true); //true means that i want file_name_list_to
 
-    let marked_directory_set: std::collections::HashSet<PathBuf> = HashSet::new();
+    let marked_directory_set: std::collections::HashSet<PathBuf> = HashSet::new(); //creating hashset of visited directories
 
     match current_dir() {
         Ok(current_dir) => {
@@ -259,7 +259,7 @@ fn comparing_files(
                         files_found,
                         found_element.path().display()
                     );
-                    marked_directory_set.insert(current_dir.clone()); //dodać licznik plików, jeśli zero wyświetlić że nie znaleziono
+                    marked_directory_set.insert(current_dir.clone());
                     reversing_graph(
                         marked_directory_set,
                         directory_list,
@@ -305,22 +305,20 @@ fn reversing_graph(
     starting_point_path: &Path,
     files_found: &mut i32,
 ) {
-    //1. dodaj siebie do sprawdzonych
+    //1. Adding to marked
     marked_directory_set.insert(current_dir.clone());
-    // println!("{}", current_dir.display());
-    //2. stwórz wektor directory których nie ma w directory list,
+    //2. create vector of items which arent marked
 
     let mut unchecked_directory_list: Vec<PathBuf> = Vec::new();
     for directory in &directory_list {
         if !marked_directory_set.contains(directory) {
             unchecked_directory_list.push(directory.to_path_buf());
         }
-    } //WORKS WELL
-
-    //Jeśli jest pusty, idź w góre wywołaj tworzenie wektora bez plików opróżnij marked_directory_list idź do 1.
+    }
+    //If its empty go to higher directory, if not choose first unmarked
     if unchecked_directory_list.is_empty() {
         if current_dir == starting_point_path {
-            // Jeśli wróciliśmy do punktu startowego i lista nieodwiedzonych katalogów jest pusta, przerywamy rekurencję
+            // if we came back to starting point and unmarked list is empty end program
             if *files_found == 0 {
                 println!(
                     "File not found in this tree {}",
@@ -329,13 +327,14 @@ fn reversing_graph(
             }
             marked_directory_set.clear();
             thread::spawn(|| {
+                //spawn thread to empty stack
                 main();
             })
             .join()
             .unwrap();
         }
 
-        current_dir.pop();
+        current_dir.pop(); //getting higher directory path
 
         let new_dir = current_dir;
 
@@ -353,15 +352,13 @@ fn reversing_graph(
             starting_point_path,
             files_found,
         );
-    }
-    //Jeśli nie
-    else {
-        //3. wejdź do directory.0
+    } else {
+        //3. Go to .0 directory in unmarked ist
         current_dir = unchecked_directory_list
             .get(0)
             .expect("CANT BE EMPTY")
             .to_owned();
-        // if not_hidden(&current_dir) {
+
         set_current_dir(current_dir.clone()).unwrap_or_else(|e| {
             println!("Couldnt get into lower directory {e} {:?}", current_dir);
             reversing_graph(
@@ -374,7 +371,7 @@ fn reversing_graph(
             );
         });
 
-        //4. ustaw nowe directory jako nazwę current_directory
+        //4. new dir = current_dir to better naming
         let new_dir = current_dir;
         //5. Stwórz nowy wektor plików i directory (wywołaj funkcję)
         let (directory_list, file_name_list) = listing_directories_and_or_files(true);
