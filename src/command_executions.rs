@@ -1,3 +1,6 @@
+use crate::main;
+use chrono::{DateTime, Utc};
+use filesize::PathExt;
 use std::{
     collections::HashSet,
     env::{current_dir, set_current_dir},
@@ -7,8 +10,6 @@ use std::{
     path::{Path, PathBuf},
     thread,
 };
-
-use crate::main;
 
 pub fn echo(input_vec: Vec<&str>) {
     for iterator in input_vec[1..].iter() {
@@ -254,10 +255,18 @@ fn comparing_files(
             {
                 Some(found_element) => {
                     *files_found += 1;
+
+                    let element_meta_data = found_element.metadata().unwrap();
+                    let file_size = found_element.path().size_on_disk().expect("file not found");
+                    let last_mod = element_meta_data.modified().unwrap();
+                    let last_mod: DateTime<Utc> = last_mod.into();
+                    let readable_time = last_mod.format("%Y-%m-%d %H:%M:%S").to_string();
                     println!(
-                        "{}. Found this file at {}",
+                        "{}. {}  {}b {:?}",
                         files_found,
-                        found_element.path().display()
+                        found_element.path().display(),
+                        file_size,
+                        readable_time
                     );
                     marked_directory_set.insert(current_dir.clone());
                     reversing_graph(
