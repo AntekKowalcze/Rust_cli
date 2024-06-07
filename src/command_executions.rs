@@ -2,13 +2,7 @@ use crate::main;
 use chrono::{DateTime, Utc};
 use filesize::PathExt;
 use std::{
-    collections::HashSet,
-    env::{current_dir, set_current_dir},
-    ffi::OsString,
-    fs::{self, read_dir, DirEntry, File},
-    io::{self, Write},
-    path::{Path, PathBuf},
-    thread,
+    collections::HashSet, env::{current_dir, set_current_dir}, ffi::OsString, fs::{self, read_dir, DirEntry, File}, io::{self, Write}, path::{Path, PathBuf}, string, thread
 };
 
 pub fn echo(input_vec: Vec<&str>) {
@@ -27,7 +21,7 @@ pub fn echo(input_vec: Vec<&str>) {
             let file_name = input_vec[redirection + 1];
 
             let mut file = File::options()
-                .create(true) //when file doesnt exist it creates new
+                .create(true) //when file doesn't exist it creates new
                 .read(true)
                 .write(true)
                 .append(true) //text will be appended to already existing, if you want to overwrite use truncate(true)
@@ -162,7 +156,9 @@ pub fn find_file_or_content_in_file(input_vec: Vec<&str>) {
                 println!("No file specified");
             }
         }
-        Some(&"-c") => {}
+        Some(&"-c") => {
+            to_change(input_vec);
+        }
 
         None | _ => {
             println!("Too less arguments");
@@ -382,7 +378,7 @@ fn reversing_graph(
 
         //4. new dir = current_dir to better naming
         let new_dir = current_dir;
-        //5. Stwórz nowy wektor plików i directory (wywołaj funkcję)
+        //5. create new file vector and directory vector (call function)
         let (directory_list, file_name_list) = listing_directories_and_or_files(true);
         comparing_files(
             file_name_list,
@@ -394,6 +390,46 @@ fn reversing_graph(
             files_found,
         );
     }
+}
+fn to_change(input_vec: Vec<&str>){
+    let input_len = input_vec.len();
+
+    if let Some(filename) = input_vec.get(2){
+        match input_vec.get(3..input_len){
+            Some(string_to_find ) => {
+                let string_to_find = string_to_find.join(" ");
+                println!("{}", string_to_find);
+               let filename =  *filename;
+               let filepath = PathBuf::from(filename);
+               match File::open(filepath){
+                Ok(File) => {
+                    
+                },
+                Err(e) => {
+                    println!("File not found {}", e);
+                    main();
+                }
+                
+               }
+
+
+               
+            },
+            //improve error (not displaying error)
+        None => {
+            println!("String to find not specified");
+            main();
+        }
+        
+    }
+
+    } else {
+        println!("file not specified");
+        main();
+
+    }
+ 
+
 }
 
 fn no_flag_expected(input_vec: &Vec<&str>, last_flag_index: usize) {
