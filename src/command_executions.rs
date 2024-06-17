@@ -1,8 +1,15 @@
 use crate::main;
 use chrono::{DateTime, Utc};
 use filesize::PathExt;
+use std::fs::File;
 use std::{
-    collections::HashSet, env::{current_dir, set_current_dir}, ffi::OsString, fs::{self, read_dir, DirEntry, File}, io::{self, Write}, path::{Path, PathBuf}, string, thread
+    collections::HashSet,
+    env::{current_dir, set_current_dir},
+    ffi::OsString,
+    fs::{self, read_dir, DirEntry},
+    io::{self, BufReader, Read, Write},
+    path::{Path, PathBuf},
+    thread,
 };
 
 pub fn echo(input_vec: Vec<&str>) {
@@ -391,47 +398,76 @@ fn reversing_graph(
         );
     }
 }
-fn to_change(input_vec: Vec<&str>){
+fn to_change(input_vec: Vec<&str>) {
     let input_len = input_vec.len();
 
-    if let Some(filename) = input_vec.get(2){
-        match input_vec.get(3..input_len){
-            Some(string_to_find ) => {
+    if let Some(filename) = input_vec.get(2) {
+        match input_vec.get(3..input_len) {
+            Some(string_to_find) => {
+                println!("string_to_find {:?}", string_to_find);
                 let string_to_find = string_to_find.join(" ");
-                println!("{}", string_to_find);
-               let filename =  *filename;
-               let filepath = PathBuf::from(filename);
-               match File::open(filepath){
-                Ok(File) => {
-                    
-                },
-                Err(e) => {
-                    println!("File not found {}", e);
-                    main();
+                let filename = *filename;
+                let filepath = PathBuf::from(filename);
+                if let Ok(file) = File::open(&filepath) {
+                    let mut reader = BufReader::new(&file);
+                    let bytes_to_find = string_to_find.as_bytes();
+                    println!("bytest to find {:?}", bytes_to_find);
+                    let mut buffer = Vec::new();
+                    reader.read_to_end(&mut buffer).expect("msg");
+
+                    if !seeking_input(bytes_to_find, buffer, &file) == true {
+                        println!("not foundddd ittt");
+                    }
+                } else if let Err(e) = File::open(&filepath) {
+                    println!("{}", e);
+                    main()
                 }
-                
-               }
-
-
-               
-            },
+            }
             //improve error (not displaying error)
-        None => {
-            println!("String to find not specified");
-            main();
+            None => {
+                println!("String to find not specified");
+                main();
+            }
         }
-        
-    }
-
     } else {
         println!("file not specified");
         main();
-
     }
- 
-
 }
-
+//its finding all frazes not words smth is fucked up.
+fn seeking_input(bytes_to_find: &[u8], buffer: Vec<u8>, file: &File) -> bool {
+    let mut letters_found = 0;
+    let mut frazes_found = 0;
+    let mut lines = 1;
+    if bytes_to_find.len() <= buffer.len() {
+        let mut iter = 0;
+        for letter in buffer {
+            if letter == 10 {
+                lines += 1;
+            }
+            if let Some(letter_to_find) = bytes_to_find.get(iter) {
+                letters_found += 1;
+                if *letter_to_find == letter {
+                    if letters_found == bytes_to_find.len() {
+                        frazes_found += 1;
+                        println!("{}. found in line {}: ", frazes_found, lines,);
+                        letters_found = 0;
+                        iter = 0;
+                    } else {
+                        iter += 1;
+                    }
+                } else {
+                    letters_found = 0;
+                }
+            }
+        }
+    }
+    if frazes_found == 0 {
+        return false;
+    } else {
+        return true;
+    }
+}
 fn no_flag_expected(input_vec: &Vec<&str>, last_flag_index: usize) {
     //This function look if there is more content that it should be in input
     if let Some(_) = input_vec.get(last_flag_index + 1) {
