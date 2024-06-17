@@ -164,7 +164,7 @@ pub fn find_file_or_content_in_file(input_vec: Vec<&str>) {
             }
         }
         Some(&"-c") => {
-            to_change(input_vec);
+            preparing_buffer_with_file_content(input_vec);
         }
 
         None | _ => {
@@ -398,7 +398,7 @@ fn reversing_graph(
         );
     }
 }
-fn to_change(input_vec: Vec<&str>) {
+fn preparing_buffer_with_file_content(input_vec: Vec<&str>) {
     let input_len = input_vec.len();
 
     if let Some(filename) = input_vec.get(2) {
@@ -441,22 +441,28 @@ fn seeking_input(bytes_to_find: &[u8], buffer: Vec<u8>, file: &File) -> bool {
     let mut lines = 1;
     if bytes_to_find.len() <= buffer.len() {
         let mut iter = 0;
-        for letter in buffer {
-            if letter == 10 {
+        for letter in &buffer {
+            if *letter == 10 {
                 lines += 1;
             }
             if let Some(letter_to_find) = bytes_to_find.get(iter) {
                 letters_found += 1;
-                if *letter_to_find == letter {
+                if letter_to_find == letter {
                     if letters_found == bytes_to_find.len() {
                         frazes_found += 1;
-                        println!("{}. found in line {}: ", frazes_found, lines,);
+                        println!(
+                            "{}. found in line {}: {}",
+                            frazes_found,
+                            lines,
+                            file.reading_line(lines, &buffer)
+                        );
                         letters_found = 0;
                         iter = 0;
                     } else {
                         iter += 1;
                     }
                 } else {
+                    iter = 0;
                     letters_found = 0;
                 }
             }
@@ -473,5 +479,23 @@ fn no_flag_expected(input_vec: &Vec<&str>, last_flag_index: usize) {
     if let Some(_) = input_vec.get(last_flag_index + 1) {
         println!("Too mutch arguments");
         main()
+    }
+}
+trait ReadingLine {
+    fn reading_line(&self, line_number: usize, buffer: &Vec<u8>) -> String;
+}
+impl ReadingLine for File {
+    fn reading_line(&self, line_number: usize, buffer: &Vec<u8>) -> String {
+        let mut line_content = String::new();
+        let mut lines = 1;
+        for letter in buffer {
+            if lines == line_number {
+                line_content.push(char::from(*letter));
+            }
+            if *letter == 10 {
+                lines += 1;
+            }
+        }
+        line_content
     }
 }
